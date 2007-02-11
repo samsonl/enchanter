@@ -16,11 +16,17 @@ public interface SSH {
 	
 	public int waitForMux(String... text) throws IOException;
 	
+	public boolean waitFor(String text) throws IOException;
+	
+	public int waitForMux(String[] text, boolean readLineOnMatch) throws IOException;
+	
+	public boolean waitFor(String text, boolean readLineOnMatch) throws IOException;
+	
 	public String lastLine();
 	
 	public String getLine() throws IOException;
 	
-	public boolean waitFor(String text) throws IOException;
+	
 	
 	public void sleep(int millis) throws InterruptedException;
 	
@@ -31,5 +37,5 @@ public interface SSH {
 	public void setDebug(boolean debug);
 
 	public void connect(String host, String username) throws IOException;
-	
+
 }
