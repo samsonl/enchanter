@@ -21,6 +21,8 @@ public class GanymedSSH implements SSH {
 	private Thread dumperThread;
 	private List<StreamListener> streamListeners = new ArrayList<StreamListener>();
 	
+	int timeout = 0;
+	
 	public void setDebug(boolean debug) {
 		if (debug) {
 			addStreamListener(new StreamListener() {
@@ -89,6 +91,8 @@ public class GanymedSSH implements SSH {
 	}
 	
 	private void print(String text, boolean eol) {
+		text = text.replace("^C", String.valueOf((char) 3));
+		text = text.replace("^M", "\r\n");
 		if (eol) {
 			out.println(text);
 		} else {
@@ -113,8 +117,16 @@ public class GanymedSSH implements SSH {
 		return dumper.waitForMux(text);
 	}
 	
+	public boolean waitFor(String text, boolean readLineOnMatch) throws IOException {
+		return dumper.waitFor(text, readLineOnMatch);
+	}
+
+	public int waitForMux(String[] text, boolean readLineOnMatch) throws IOException {
+		return dumper.waitForMux(text, readLineOnMatch);
+	}
+	
 	public void setTimeout(int timeout) {
-		dumper.setTimeout(timeout);
+		this.timeout = timeout;
 	}
 	
 	public void respond(String prompt, String response) {
@@ -126,8 +138,7 @@ public class GanymedSSH implements SSH {
 	}
 	
 	public String getLine() throws IOException {
-		int index = dumper.waitForMux(new String[]{"\n", "\r", "\r\n"});
-		if (index > -1) {
+		if (dumper.waitFor("\r\n")) {
 			return dumper.getLastLine();
 		}
 		return null;
@@ -142,15 +153,10 @@ public class GanymedSSH implements SSH {
 		char lastChar;
 		boolean alive = true;
 		StringBuilder lastLine = new StringBuilder();
-		int timeout = 0;
 		Thread timeoutThread;
 		
 		public InputStreamDumper(InputStream in) {
 			this.in = new BufferedInputStream(in, 2048);
-		}
-		
-		public synchronized void setTimeout(int timeout) {
-			this.timeout = timeout;
 		}
 		
 		public synchronized void respond(String prompt, String response) {
@@ -162,13 +168,21 @@ public class GanymedSSH implements SSH {
 		}
 		
 		public synchronized boolean waitFor(String waitFor) throws IOException {
-			prepare(new String[]{waitFor});
-			return (readFromStream() == 0);
+			return waitFor(waitFor, false);
 		}
 		
 		public synchronized int waitForMux(String[] waitFor) throws IOException {
+			return waitForMux(waitFor, false);
+		}
+		
+		public synchronized boolean waitFor(String waitFor, boolean readLineOnMatch) throws IOException {
+			prepare(new String[]{waitFor});
+			return (readFromStream(readLineOnMatch) == 0);
+		}
+		
+		public synchronized int waitForMux(String[] waitFor, boolean readLineOnMatch) throws IOException {
 			prepare(waitFor);
-			return readFromStream();
+			return readFromStream(readLineOnMatch);
 		}
 		
 		protected void prepare(String[] text) {
@@ -190,9 +204,10 @@ public class GanymedSSH implements SSH {
 			alive = false;
 		}
 
-		public int readFromStream() throws IOException {
+		public int readFromStream(boolean readLineOnMatch) throws IOException {
 			int result = -1;
 			int data;
+			boolean readTillEndOfLine = false;
 			if (timeout > 0) {
 				timeoutThread = new Thread() {
 					public void run() {
@@ -210,9 +225,18 @@ public class GanymedSSH implements SSH {
 				for (StreamListener listener : streamListeners) {
 					listener.hasRead((byte)data);
 				}
-				result = lookForMatch((char)data);
-				if (result != -1) {
+				char c = (char)data;
+				if (readTillEndOfLine && (c == '\r' || c == '\n'))
 					break;
+				
+				int match = lookForMatch(c);
+				if (match != -1) {
+					result = match;
+					if (readLineOnMatch && (c != '\r' && c != '\n')) {
+						readTillEndOfLine = true;
+					} else {
+						break;
+					}
 				} else {
 					lookForResponse((char)data);
 					lastChar = (char)data;
@@ -229,7 +253,6 @@ public class GanymedSSH implements SSH {
 				Prompt prompt = (Prompt) waitFor.get(m);
 				if (prompt.matchChar(s)) {
 					// the whole thing matched so, return the match answer
-					// and reset to use the next match
 					if (prompt.match()) {
 						return m;
 					} else {
