@@ -1,0 +1,159 @@
+package org.twdata.enchanter;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+
+import org.apache.bsf.BSFManager;
+
+import ch.ethz.ssh2.Connection;
+import ch.ethz.ssh2.Session;
+
+public class Main {
+
+	/**
+	 * @param args
+	 * @throws Exception 
+	 */
+	public static void main(String[] args) throws Exception {
+		String hostname = "127.0.0.1";
+		String username = "mrdon";
+		String password = "mdbkiu";
+
+		try
+		{
+			/* Create a connection instance */
+
+			Connection conn = new Connection(hostname);
+
+			/* Now connect */
+
+			conn.connect();
+
+			/* Authenticate.
+			 * If you get an IOException saying something like
+			 * "Authentication method password not supported by the server at this stage."
+			 * then please check the FAQ.
+			 */
+
+			boolean isAuthenticated = conn.authenticateWithPassword(username, password);
+
+			if (isAuthenticated == false)
+				throw new IOException("Authentication failed.");
+
+			/* Create a session */
+
+			Session sess = conn.openSession();
+			
+			sess.requestDumbPTY();
+			
+			PrintWriter out = new PrintWriter(sess.getStdin());
+			InputStreamDumper dumper = new InputStreamDumper(sess.getStdout(), out);
+			Thread t = new Thread(dumper);
+			t.start();
+			sess.startShell();
+		
+			String script = "in.waitFor(\":~$\");\n" +
+							"out.println(\"ls\");\n" +
+							"out.flush();\n" +
+							"in.waitFor(\":~$\");\n" +
+							"out.println(\"ps\");\n" +
+							"out.flush();\n" +
+							"in.waitFor(\":~$\");\n";
+			
+			BSFManager bsf = new BSFManager();
+			bsf.declareBean("in", dumper, InputStreamDumper.class);
+			bsf.declareBean("out", out, PrintWriter.class);
+			
+			bsf.exec("beanshell", "path", 0, 0, script);
+			/*boolean matched = dumper.waitFor(":~$");
+			System.out.println("matched: "+matched);
+			out.println("ls");
+			out.flush();
+			matched = dumper.waitFor(":~$");
+			System.out.println("matched: "+matched);
+			out.println("ps");
+			out.flush();
+			matched = dumper.waitFor("notfound", 3000);
+			System.out.println("matched: "+matched);
+			*/
+			
+			/* Close this session */
+
+			sess.close();
+
+			/* Close the connection */
+
+			conn.close();
+
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace(System.err);
+			System.exit(2);
+		}
+
+	}
+	
+	public static class InputStreamDumper implements Runnable {
+		private InputStream in;
+		private PrintWriter out;
+		int matchPos;
+		String waitFor = null;
+		boolean lastMatched = false;
+		
+		public InputStreamDumper(InputStream in, PrintWriter out) {
+			this.in = in;
+			this.out = out;
+		}
+		
+		public synchronized boolean waitFor(String waitFor, int timeout) throws InterruptedException {
+			this.lastMatched = false;
+			this.waitFor = waitFor;
+			this.wait(timeout);
+			return this.lastMatched;
+		}
+		
+		public synchronized boolean waitFor(String waitFor) throws InterruptedException {
+			this.lastMatched = false;
+			this.waitFor = waitFor;
+			this.wait();
+			return this.lastMatched;
+		}
+
+		public void run() {
+			byte[] buffer = new byte[1024];
+			int len = 0;
+			try {
+				while ((len = in.read(buffer)) > 0) {
+					System.out.print(new String(buffer, 0, len));
+					lookForMatch(buffer, len);
+				}
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+		synchronized void lookForMatch(byte[] s, int length) {
+			if (waitFor != null) {
+				for(int i = 0; i < length; i++) {
+					if(s[i] == waitFor.charAt(matchPos)) {
+						// the whole thing matched so, return the match answer
+						// and reset to use the next match
+						if(++matchPos >= waitFor.length()) {
+							lastMatched = true;
+							this.notifyAll();
+							matchPos = 0;
+						}
+						
+					} else // if the current character did not match reset
+						matchPos = 0;
+			    }
+			}
+		}
+
+	}
+
+}
