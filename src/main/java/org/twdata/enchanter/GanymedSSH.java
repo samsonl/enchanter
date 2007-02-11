@@ -13,6 +13,9 @@ import java.util.Map;
 import ch.ethz.ssh2.Connection;
 import ch.ethz.ssh2.Session;
 
+/**
+ * An implementation of an ssh library using Ganymed
+ */
 public class GanymedSSH implements SSH {
 
 	private Session sess;
@@ -81,28 +84,31 @@ public class GanymedSSH implements SSH {
 		
 	}
 
-	public void send(String text) {
+	public void send(String text) throws IOException {
 		print(text, false);
 
 	}
 
-	public void sendLine(String text) {
+	public void sendLine(String text) throws IOException {
 		print(text, true);
 	}
 	
-	private void print(String text, boolean eol) {
+	private void print(String text, boolean eol) throws IOException {
 		text = text.replace("^C", String.valueOf((char) 3));
 		text = text.replace("^M", "\r\n");
 		if (eol) {
 			out.println(text);
+			out.flush();
+			getLine();
 		} else {
 			out.print(text);
+			out.flush();
 		}
 		byte[] bytes = text.getBytes();
 		for (StreamListener listener : streamListeners) {
 			listener.hasWritten(bytes);
 		}
-		out.flush();
+		
 	}
 
 	public void sleep(int millis) throws InterruptedException {
@@ -110,11 +116,11 @@ public class GanymedSSH implements SSH {
 	}
 
 	public boolean waitFor(String text) throws IOException {
-		return dumper.waitFor(text);
+		return dumper.waitFor(text, false);
 	}
 
 	public int waitForMux(String... text) throws IOException {
-		return dumper.waitForMux(text);
+		return dumper.waitForMux(text, false);
 	}
 	
 	public boolean waitFor(String text, boolean readLineOnMatch) throws IOException {
@@ -138,7 +144,7 @@ public class GanymedSSH implements SSH {
 	}
 	
 	public String getLine() throws IOException {
-		if (dumper.waitFor("\r\n")) {
+		if (dumper.waitFor("\r\n", false)) {
 			return dumper.getLastLine();
 		}
 		return null;
@@ -165,14 +171,6 @@ public class GanymedSSH implements SSH {
 			} else {
 				respondWith.put(prompt, new Response(prompt, response));
 			}
-		}
-		
-		public synchronized boolean waitFor(String waitFor) throws IOException {
-			return waitFor(waitFor, false);
-		}
-		
-		public synchronized int waitForMux(String[] waitFor) throws IOException {
-			return waitForMux(waitFor, false);
 		}
 		
 		public synchronized boolean waitFor(String waitFor, boolean readLineOnMatch) throws IOException {
@@ -270,7 +268,7 @@ public class GanymedSSH implements SSH {
 			return -1;
 		}
 		
-		synchronized void lookForResponse(char s) {
+		synchronized void lookForResponse(char s) throws IOException {
 			for (Response response : respondWith.values()) {
 				if (response.matchChar(s)) {
 					if (response.match()) {

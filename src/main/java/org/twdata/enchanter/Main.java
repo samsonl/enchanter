@@ -7,6 +7,9 @@ import org.apache.bsf.BSFException;
 import org.apache.bsf.BSFManager;
 import org.apache.bsf.util.IOUtils;
 
+/**
+ * Executes the passed script using the Bean Scripting Framework
+ */
 public class Main {
 
 	/**
