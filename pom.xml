@@ -4,9 +4,9 @@
   <groupId>org.twdata.enchanter</groupId>
   <artifactId>enchanter</artifactId>
   <packaging>jar</packaging>
-  <version>1.0-SNAPSHOT</version>
-  <name>Maven Quick Start Archetype</name>
-  <url>http://maven.apache.org</url>
+  <version>0.1</version>
+  <name>Enchanter</name>
+  <url>http://code.google.com/p/enchanter</url>
   <dependencies>
     <dependency>
       <groupId>ch.ethz.ganymed</groupId>

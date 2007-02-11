@@ -12,30 +12,30 @@ import org.apache.bsf.util.IOUtils;
  */
 public class Main {
 
-	/**
-	 * @param args
-	 * @throws BSFException 
-	 */
-	public static void main(String[] args) throws BSFException {
-		if (args.length == 0) {
-			System.err.println("Usage: java -jar enchanter.jar SCRIPT_PATH");
-			System.exit(1);
-		}
-		
-		String filePath = args[0];
-		
-		BSFManager bsfManager = new BSFManager();
-		SSH ssh = new GanymedSSH();
-		bsfManager.declareBean("ssh", ssh, SSH.class);
-		
-		String fileContents = null;
-		FileReader reader = null;
+    /**
+     * @param args
+     * @throws BSFException
+     */
+    public static void main(String[] args) throws BSFException {
+        if (args.length == 0) {
+            System.err.println("Usage: java -jar enchanter.jar SCRIPT_PATH");
+            System.exit(1);
+        }
+
+        String filePath = args[0];
+
+        BSFManager bsfManager = new BSFManager();
+        SSH ssh = new GanymedSSH();
+        bsfManager.declareBean("ssh", ssh, SSH.class);
+
+        String fileContents = null;
+        FileReader reader = null;
         try {
             reader = new FileReader(filePath);
             fileContents = IOUtils.getStringFromReader(reader);
         } catch (IOException ex) {
-        	System.err.println("Unable to load script: "+filePath);
-			System.exit(1);
+            System.err.println("Unable to load script: " + filePath);
+            System.exit(1);
         } finally {
             if (reader != null) {
                 try {
@@ -45,11 +45,11 @@ public class Main {
                 }
             }
         }
-        
+
         String language = BSFManager.getLangFromFilename(filePath);
-        
+
         bsfManager.exec(language, filePath, 0, 0, fileContents);
 
-	}
+    }
 
 }
