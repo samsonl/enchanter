@@ -6,6 +6,7 @@ import java.io.IOException;
 import org.apache.bsf.BSFException;
 import org.apache.bsf.BSFManager;
 import org.apache.bsf.util.IOUtils;
+import org.twdata.enchanter.impl.DefaultSSH;
 
 /**
  * Executes the passed script using the Bean Scripting Framework
@@ -25,7 +26,7 @@ public class Main {
         String filePath = args[0];
 
         BSFManager bsfManager = new BSFManager();
-        SSH ssh = new GanymedSSH();
+        SSH ssh = new DefaultSSH();
         bsfManager.declareBean("ssh", ssh, SSH.class);
 
         String fileContents = null;
