@@ -4,7 +4,7 @@
   <groupId>org.twdata.enchanter</groupId>
   <artifactId>enchanter</artifactId>
   <packaging>jar</packaging>
-  <version>0.1</version>
+  <version>0.2-SNAPSHOT</version>
   <name>Enchanter</name>
   <url>http://code.google.com/p/enchanter</url>
   <dependencies>
