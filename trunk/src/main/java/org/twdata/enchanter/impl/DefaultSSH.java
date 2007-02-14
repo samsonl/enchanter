@@ -6,6 +6,7 @@ package org.twdata.enchanter.impl;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.PushbackInputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -20,19 +21,22 @@ import org.twdata.enchanter.StreamListener;
  */
 public class DefaultSSH implements SSH {
     
-    private BufferedInputStream in;
+    private PushbackInputStream in;
     private PrintWriter out;
     
     private Map<String, Response> respondWith = new HashMap<String, Response>();
     private List<Prompt> waitFor = new ArrayList<Prompt>();
     List<StreamListener> streamListeners = new ArrayList<StreamListener>();
 
+    private boolean readTillEndOfLine = false;
     private char lastChar;
+    private int lastMatch = -1;
     private boolean alive = true;
     private StringBuilder lastLine = new StringBuilder();
     private Thread timeoutThread;
     private int timeout = 0;
     private SSHConnection sshConnection;
+    private int readBufferSize = 2048;
 
     public DefaultSSH() {
         this.sshConnection = new GanymedSSH();
@@ -40,13 +44,18 @@ public class DefaultSSH implements SSH {
     
     public void connect(String host, String username) throws IOException {
         sshConnection.connect(host, username);
-        this.in = new BufferedInputStream(sshConnection.getInputStream());
-        this.out = new PrintWriter(sshConnection.getOutputStream());
+        init();
     }
 
     public void connect(String host, int port, String username,
             final String password) throws IOException {
         sshConnection.connect(host, port, username, password);
+        init();
+    }
+    
+    protected void init() {
+        this.in = new PushbackInputStream(new BufferedInputStream(sshConnection.getInputStream()), readBufferSize);
+        this.out = new PrintWriter(sshConnection.getOutputStream());
     }
     
     public void setSSHConnection(SSHConnection conn) {
@@ -68,9 +77,8 @@ public class DefaultSSH implements SSH {
     public void setDebug(boolean debug) {
         if (debug) {
             addStreamListener(new StreamListener() {
-                public void hasRead(byte b) {
-                    if (b != '\r')
-                        System.out.print((char) b);
+                public void hasRead(byte[] b, int pos, int len) {
+                    System.out.print(new String(b, pos, len));
                 }
 
                 public void hasWritten(byte[] b) {
@@ -164,9 +172,12 @@ public class DefaultSSH implements SSH {
     }
 
     public int readFromStream(boolean readLineOnMatch) throws IOException {
-        int result = -1;
-        int data;
-        boolean readTillEndOfLine = false;
+        lastMatch = -1;
+        byte[] buffer = new byte[readBufferSize];
+        int len = 0;
+        readTillEndOfLine = false;
+        
+        
         if (timeout > 0) {
             timeoutThread = new Thread() {
                 public void run() {
@@ -180,53 +191,61 @@ public class DefaultSSH implements SSH {
             };
             timeoutThread.start();
         }
-        while (alive && (data = in.read()) >= 0) {
-            for (StreamListener listener : streamListeners) {
-                listener.hasRead((byte) data);
+        while (alive && (len = in.read(buffer)) >= 0) {
+            
+            int pos = lookForMatch(buffer, len);
+            if ((pos + 1) < len) {
+                in.unread(buffer, pos + 1, len - pos - 1);
             }
-            char c = (char) data;
-            if (readTillEndOfLine && (c == '\r' || c == '\n'))
-                break;
-
-            int match = lookForMatch(c);
-            if (match != -1) {
-                result = match;
+            
+            for (StreamListener listener : streamListeners) {
+                listener.hasRead(buffer, pos, len - pos);
+            }
+            
+            if (lastMatch != -1) {
+                char c = (char) buffer[pos];
                 if (readLineOnMatch && (c != '\r' && c != '\n')) {
                     readTillEndOfLine = true;
                 } else {
                     break;
                 }
-            } else {
-                lookForResponse((char) data);
-                lastChar = (char) data;
-            }
+            } 
         }
         reset();
-        return result;
+        return lastMatch;
     }
 
-    int lookForMatch(char s) {
-        if (s != '\r' && s != '\n')
-            lastLine.append(s);
-        for (int m = 0; alive && m < waitFor.size(); m++) {
-            Prompt prompt = (Prompt) waitFor.get(m);
-            if (prompt.matchChar(s)) {
-                // the whole thing matched so, return the match answer
-                if (prompt.match()) {
-                    return m;
+    int lookForMatch(byte[] buffer, int len) throws IOException {
+        for (int pos = 0; pos < len; pos++) {
+            char s = (char) buffer[pos];
+            if (readTillEndOfLine && (s == '\r' || s == '\n'))
+                return pos;
+            
+            if (s != '\r' && s != '\n')
+                lastLine.append(s);
+            for (int m = 0; alive && m < waitFor.size(); m++) {
+                Prompt prompt = (Prompt) waitFor.get(m);
+                if (prompt.matchChar(s)) {
+                    // the whole thing matched so, return the match answer
+                    if (prompt.match()) {
+                        lastMatch = m;
+                        return pos;
+                    } else {
+                        prompt.nextPos();
+                    }
+    
                 } else {
-                    prompt.nextPos();
-                }
-
-            } else {
-                // if the current character did not match reset
-                prompt.resetPos();
-                if (s == '\n' && lastChar == '\r') {
-                    lastLine.setLength(0);
+                    // if the current character did not match reset
+                    prompt.resetPos();
+                    if (s == '\n' && lastChar == '\r') {
+                        lastLine.setLength(0);
+                    }
                 }
             }
+            lookForResponse(s);
+            lastChar = s;
         }
-        return -1;
+        return len;
     }
 
     void lookForResponse(char s) throws IOException {

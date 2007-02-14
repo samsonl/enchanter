@@ -65,6 +65,12 @@ public class DefaultSSHTest extends TestCase {
         assertTrue(ssh.waitFor("bar", true));
         assertTrue(ssh.waitFor("jo", true));
         assertFalse(ssh.waitFor("asdf", true));
+        
+        conn.setInputStream(new ByteArrayInputStream("foo\r\nbzrn\r\njoo".getBytes()));
+        ssh.connect(null, null);
+        assertTrue(ssh.waitFor("bz", false));
+        assertTrue(ssh.waitFor("rn", false));
+        assertFalse(ssh.waitFor("asdf", false));
     }
 
     public void testWaitForMuxStringArrayBoolean() throws IOException {
