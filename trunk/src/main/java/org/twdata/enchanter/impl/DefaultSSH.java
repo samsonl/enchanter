@@ -5,6 +5,8 @@ package org.twdata.enchanter.impl;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.io.PrintWriter;
 import java.io.PushbackInputStream;
 import java.util.ArrayList;
@@ -13,16 +15,17 @@ import java.util.List;
 import java.util.Map;
 
 import org.twdata.enchanter.SSH;
-import org.twdata.enchanter.SSHConnection;
+import org.twdata.enchanter.SSHLibrary;
 import org.twdata.enchanter.StreamListener;
 
 /**
  * Default implementation of SSH connection and parsing methods
  */
-public class DefaultSSH implements SSH {
+public class DefaultSSH implements SSH, StreamListener {
     
-    private PushbackInputStream in;
     private PrintWriter out;
+    
+    private StringBuilder backBuffer;
     
     private Map<String, Response> respondWith = new HashMap<String, Response>();
     private List<Prompt> waitFor = new ArrayList<Prompt>();
@@ -35,46 +38,53 @@ public class DefaultSSH implements SSH {
     private StringBuilder lastLine = new StringBuilder();
     private Thread timeoutThread;
     private int timeout = 0;
-    private SSHConnection sshConnection;
-    private int readBufferSize = 2048;
+    private SSHLibrary sshConnection;
+    private Thread streamReaderThread;
+    private StreamReader streamReader;
 
     public DefaultSSH() {
         this.sshConnection = new GanymedSSH();
+        this.streamListeners.add(this);
+        this.backBuffer = new StringBuilder(5 * 1024);
     }
     
-    public void connect(String host, String username) throws IOException {
+    public synchronized void connect(String host, String username) throws IOException {
         sshConnection.connect(host, username);
         init();
     }
 
-    public void connect(String host, int port, String username,
+    public synchronized void connect(String host, int port, String username,
             final String password) throws IOException {
         sshConnection.connect(host, port, username, password);
         init();
     }
     
     protected void init() {
-        this.in = new PushbackInputStream(new BufferedInputStream(sshConnection.getInputStream()), readBufferSize);
+        
         this.out = new PrintWriter(sshConnection.getOutputStream());
+        this.streamReader = new StreamReader(sshConnection.getInputStream(), streamListeners);
+        streamReaderThread = new Thread(streamReader);
+        streamReaderThread.start();
     }
     
-    public void setSSHConnection(SSHConnection conn) {
+    public void setSSHConnection(SSHLibrary conn) {
         this.sshConnection = conn;
     }
     
-    public void disconnect() {
+    public synchronized void disconnect() {
         if (timeoutThread != null) {
             timeoutThread.interrupt();
         }
         alive = false;
+        streamReader.stop();
         sshConnection.disconnect();
     }
     
-    public void addStreamListener(StreamListener listener) {
+    public synchronized void addStreamListener(StreamListener listener) {
         streamListeners.add(listener);
     }
     
-    public void setDebug(boolean debug) {
+    public synchronized void setDebug(boolean debug) {
         if (debug) {
             addStreamListener(new StreamListener() {
                 public void hasRead(byte[] b, int pos, int len) {
@@ -85,20 +95,21 @@ public class DefaultSSH implements SSH {
                     // Not usually necessary
                     // System.out.print(new String(b));
                 }
+                public void close() {}
             });
         }
     }
     
-    public void send(String text) throws IOException {
+    public synchronized void send(String text) throws IOException {
         print(text, false);
 
     }
 
-    public void sendLine(String text) throws IOException {
+    public synchronized void sendLine(String text) throws IOException {
         print(text, true);
     }
 
-    public void sleep(int millis) throws InterruptedException {
+    public synchronized void sleep(int millis) throws InterruptedException {
         Thread.sleep(millis);
     }
     
@@ -120,7 +131,7 @@ public class DefaultSSH implements SSH {
 
     }
 
-    public void respond(String prompt, String response) {
+    public synchronized void respond(String prompt, String response) {
         if (response == null) {
             respondWith.remove(prompt);
         } else {
@@ -128,124 +139,129 @@ public class DefaultSSH implements SSH {
         }
     }
     
-    public boolean waitFor(String waitFor) throws IOException {
+    public synchronized boolean waitFor(String waitFor) throws IOException {
         return waitFor(waitFor, false);
     }
 
-    public boolean waitFor(String waitFor,
+    public synchronized boolean waitFor(String waitFor,
             boolean readLineOnMatch) throws IOException {
-        prepare(new String[] { waitFor });
-        return (readFromStream(readLineOnMatch) == 0);
+        prepare(new String[] { waitFor }, readLineOnMatch);
+        try {
+            String data = backBuffer.toString();
+            backBuffer.setLength(0);
+            readFromStream(data, false);
+            if (this.waitFor.size() > 0) {
+                wait(timeout);
+            }
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } finally {
+            this.waitFor.clear();
+        }
+        return (lastMatch == 0);
     }
+    static int counter = 0;
 
-    public int waitForMux(String[] waitFor) throws IOException {
+    public synchronized int waitForMux(String[] waitFor) throws IOException {
         return waitForMux(waitFor, false);
     }
     
-    public int waitForMux(String[] waitFor,
+    public synchronized int waitForMux(String[] waitFor,
             boolean readLineOnMatch) throws IOException {
-        prepare(waitFor);
-        return readFromStream(readLineOnMatch);
+        prepare(waitFor, readLineOnMatch);
+        try {
+            String data = backBuffer.toString();
+            backBuffer.setLength(0);
+            readFromStream(data, false);
+            if (this.waitFor.size() > 0) {
+                wait(timeout);
+            }
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } finally {
+            this.waitFor.clear();
+        }
+        return lastMatch;
     }
     
-    public void setTimeout(int timeout) {
+    public synchronized void setTimeout(int timeout) {
         this.timeout = timeout;
     }
 
-    protected void prepare(String[] text) {
+    protected void prepare(String[] text, boolean readLineOnMatch) {
         this.alive = true;
         for (String val : text) {
-            waitFor.add(new Prompt(val));
+            waitFor.add(new Prompt(val, readLineOnMatch));
         }
+        this.lastMatch = -1;
+        this.readTillEndOfLine = false;
         this.lastLine.setLength(0);
     }
 
-    public String lastLine() {
+    public synchronized String lastLine() {
         return this.lastLine.toString();
     }
     
-    public String getLine() throws IOException {
+    public synchronized String getLine() throws IOException {
         if (waitFor("\r\n", false)) {
             return lastLine();
         }
         return null;
     }
 
-    public int readFromStream(boolean readLineOnMatch) throws IOException {
-        lastMatch = -1;
-        byte[] buffer = new byte[readBufferSize];
-        int len = 0;
-        readTillEndOfLine = false;
-        
-        
-        if (timeout > 0) {
-            timeoutThread = new Thread() {
-                public void run() {
-                    try {
-                        sleep(timeout);
-                    } catch (InterruptedException e) {
-                        return;
-                    }
-                    alive = false;
-                }
-            };
-            timeoutThread.start();
-        }
-        while (alive && (len = in.read(buffer)) >= 0) {
-            
-            int pos = lookForMatch(buffer, len);
-            if ((pos + 1) < len) {
-                in.unread(buffer, pos + 1, len - pos - 1);
-            }
-            
-            for (StreamListener listener : streamListeners) {
-                listener.hasRead(buffer, pos, len - pos);
-            }
-            
-            if (lastMatch != -1) {
-                char c = (char) buffer[pos];
-                if (readLineOnMatch && (c != '\r' && c != '\n')) {
-                    readTillEndOfLine = true;
-                } else {
+    synchronized void readFromStream(CharSequence data, boolean notifyOnMatch) throws IOException {
+        if (waitFor.size() == 0) {
+            backBuffer.append(data);
+        } else {
+            for (int x = 0; x < data.length(); x++) {
+                char s = data.charAt(x);
+                
+                if (waitFor.size() == 0) {
+                    backBuffer.append(data, x, data.length() - 1);
                     break;
-                }
-            } 
-        }
-        reset();
-        return lastMatch;
-    }
-
-    int lookForMatch(byte[] buffer, int len) throws IOException {
-        for (int pos = 0; pos < len; pos++) {
-            char s = (char) buffer[pos];
-            if (readTillEndOfLine && (s == '\r' || s == '\n'))
-                return pos;
-            
-            if (s != '\r' && s != '\n')
-                lastLine.append(s);
-            for (int m = 0; alive && m < waitFor.size(); m++) {
-                Prompt prompt = (Prompt) waitFor.get(m);
-                if (prompt.matchChar(s)) {
-                    // the whole thing matched so, return the match answer
-                    if (prompt.match()) {
-                        lastMatch = m;
-                        return pos;
-                    } else {
-                        prompt.nextPos();
-                    }
-    
                 } else {
-                    // if the current character did not match reset
-                    prompt.resetPos();
-                    if (s == '\n' && lastChar == '\r') {
-                        lastLine.setLength(0);
+                    if (readTillEndOfLine && (s == '\r' || s == '\n')) {
+                        x--;
+                        waitFor.clear();
+                        notifyAll();
+                        continue;
                     }
+                    
+                    if (s != '\r' && s != '\n')
+                        lastLine.append(s);
+                    for (int m = 0; alive && m < waitFor.size(); m++) {
+                        Prompt prompt = (Prompt) waitFor.get(m);
+                        if (prompt.matchChar(s)) {
+                            // the whole thing matched so, return the match answer
+                            if (prompt.match()) {
+                                lastMatch = m;
+                                if (prompt.readLineOnMatch() && (s != '\r' && s != '\n')) {
+                                    readTillEndOfLine = true;
+                                } else {
+                                    //System.out.println("found match");
+                                    waitFor.clear();
+                                    notifyAll();
+                                    continue;
+                                }
+                            } else {
+                                prompt.nextPos();
+                            }
+            
+                        } else {
+                            // if the current character did not match reset
+                            prompt.resetPos();
+                            if (s == '\n' && lastChar == '\r') {
+                                lastLine.setLength(0);
+                            }
+                        }
+                    }
+                    lookForResponse(s);
+                    lastChar = s;
                 }
             }
-            lookForResponse(s);
-            lastChar = s;
         }
-        return len;
     }
 
     void lookForResponse(char s) throws IOException {
@@ -263,22 +279,20 @@ public class DefaultSSH implements SSH {
         }
     }
 
-    void reset() {
-        waitFor.clear();
-        if (timeout > 0) {
-            timeoutThread.interrupt();
-        }
-        alive = true;
-    }
-    
     static class Prompt {
         private String prompt;
+        private boolean readLineOnMatch;
 
         private int pos;
 
         public Prompt(String prompt) {
+            this(prompt, false);
+        }
+        
+        public Prompt(String prompt, boolean readLineOnMatch) {
             this.prompt = prompt;
             this.pos = 0;
+            this.readLineOnMatch = readLineOnMatch;
         }
 
         public boolean matchChar(char c) {
@@ -300,6 +314,10 @@ public class DefaultSSH implements SSH {
         public void resetPos() {
             this.pos = 0;
         }
+        
+        public boolean readLineOnMatch() {
+            return readLineOnMatch;
+        }
 
     }
 
@@ -316,4 +334,26 @@ public class DefaultSSH implements SSH {
         }
     }
 
+    public void hasRead(byte[] b, int pos, int len) {
+        try {
+            readFromStream(new String(b, pos, len), true);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+
+    public void hasWritten(byte[] b) {
+        // TODO Auto-generated method stub
+        
+    }
+    
+    public synchronized void close() {
+        waitFor.clear();
+        try {
+            notifyAll();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
 }

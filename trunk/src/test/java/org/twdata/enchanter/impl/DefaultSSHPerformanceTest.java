@@ -10,7 +10,7 @@ import junit.framework.TestCase;
 public class DefaultSSHPerformanceTest extends TestCase {
 
     DefaultSSH ssh;
-    StubSSHConnection conn;
+    StubSSHLibrary conn;
     byte[] bibleBytes;
     
     public DefaultSSHPerformanceTest(String arg0) throws IOException {
@@ -29,7 +29,7 @@ public class DefaultSSHPerformanceTest extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
         ssh = new DefaultSSH();
-        conn = new StubSSHConnection();
+        conn = new StubSSHLibrary();
         conn.setInputStream(new ByteArrayInputStream(bibleBytes));
         ssh.setSSHConnection(conn);
         ssh.connect("host", "username");

@@ -20,5 +20,7 @@ public interface StreamListener {
      * @param s The data
      */
     public void hasWritten(byte[] b);
+    
+    public void close();
 
 }
