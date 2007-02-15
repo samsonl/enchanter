@@ -12,7 +12,7 @@ public interface StreamListener {
      * @param b the data
      * @return the amount of bytes actually read
      */
-    public void hasRead(byte[] b, int pos, int len);
+    public void hasRead(byte b);
 
     /**
      * Called when data has been written to the stream from a filter
@@ -20,7 +20,5 @@ public interface StreamListener {
      * @param s The data
      */
     public void hasWritten(byte[] b);
-    
-    public void close();
 
 }
