@@ -9,7 +9,7 @@ import junit.framework.TestCase;
 public class DefaultSSHTest extends TestCase {
 
     DefaultSSH ssh;
-    StubSSHConnection conn;
+    StubSSHLibrary conn;
     
     public DefaultSSHTest(String arg0) {
         super(arg0);
@@ -18,7 +18,7 @@ public class DefaultSSHTest extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
         ssh = new DefaultSSH();
-        conn = new StubSSHConnection();
+        conn = new StubSSHLibrary();
         ssh.setSSHConnection(conn);
         ssh.connect("host", "username");
     }
