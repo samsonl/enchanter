@@ -135,7 +135,7 @@ public class DefaultSSH implements SSH {
         return (readFromStream(readLineOnMatch) == 0);
     }
 
-    public int waitForMux(String[] waitFor) throws IOException {
+    public int waitForMux(String... waitFor) throws IOException {
         return waitForMux(waitFor, false);
     }
     
