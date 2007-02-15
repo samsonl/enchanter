@@ -8,7 +8,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.twdata.enchanter.SSHLibrary;
+import org.twdata.enchanter.SSHConnection;
 
 import ch.ethz.ssh2.Connection;
 import ch.ethz.ssh2.Session;
@@ -16,7 +16,7 @@ import ch.ethz.ssh2.Session;
 /**
  * An implementation of an ssh library using Ganymed
  */
-public class GanymedSSH implements SSHLibrary {
+public class GanymedSSH implements SSHConnection {
 
     private Session sess;
     
