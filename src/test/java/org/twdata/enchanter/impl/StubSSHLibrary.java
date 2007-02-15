@@ -8,9 +8,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import org.twdata.enchanter.SSHConnection;
+import org.twdata.enchanter.SSHLibrary;
 
-public class StubSSHConnection implements SSHConnection {
+public class StubSSHLibrary implements SSHLibrary {
 
     InputStream inputStream;
     OutputStream outputStream = new ByteArrayOutputStream();

@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.twdata.enchanter.SSH;
-import org.twdata.enchanter.SSHConnection;
+import org.twdata.enchanter.SSHLibrary;
 import org.twdata.enchanter.StreamListener;
 
 /**
@@ -32,14 +32,18 @@ public class DefaultSSH implements SSH {
     private StringBuilder lastLine = new StringBuilder();
     private Thread timeoutThread;
     private int timeout = 0;
-    private SSHConnection sshConnection;
+    private SSHLibrary sshConnection;
 
     public DefaultSSH() {
-        this.sshConnection = new GanymedSSH();
+        this.sshConnection = new GanymedSSHLibrary();
     }
     
     public void connect(String host, String username) throws IOException {
         sshConnection.connect(host, username);
+        setupStreams();
+    }
+
+    private void setupStreams() {
         this.in = new BufferedInputStream(sshConnection.getInputStream());
         this.out = new PrintWriter(sshConnection.getOutputStream());
     }
@@ -47,9 +51,10 @@ public class DefaultSSH implements SSH {
     public void connect(String host, int port, String username,
             final String password) throws IOException {
         sshConnection.connect(host, port, username, password);
+        setupStreams();
     }
     
-    public void setSSHConnection(SSHConnection conn) {
+    public void setSSHConnection(SSHLibrary conn) {
         this.sshConnection = conn;
     }
     
