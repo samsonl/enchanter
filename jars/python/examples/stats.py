@@ -16,9 +16,8 @@ ssh.send("^C")
 ssh.waitFor(prompt)
 print "\n==== Disk Usage ====\n"
 ssh.sendLine("df")
-mux = ["\r\n", prompt]
 while 1:
-    id = ssh.waitForMux(mux)
+    id = ssh.waitForMux(["\r\n", prompt])
     if id == 0 :
         print ssh.lastLine()
     else:
