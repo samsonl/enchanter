@@ -1,0 +1,5 @@
+$ssh.connect("www.twdata.org", "mrdon")
+$ssh.waitFor(":~>")
+$ssh.sendLine("date")
+puts "Server date is "+$ssh.getLine()
+$ssh.disconnect()
