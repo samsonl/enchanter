@@ -1,4 +1,5 @@
 #summary Learning Mode
+#labels Featured
 
 = Introduction =
 
@@ -18,10 +19,11 @@ Learning mode can be invoked from the command line by passing special arguments:
 
 In learning mode, the script name, passed as the last argument, is interpreted as the name of the file to write the generated script.
 
+The learning mode works by keeping track of the last 10 (configurable with the `prompt-size` argument) characters throughout the session.  When the user types characters that end in a newline, the last 10 characters (or as many as occurred after the last newline) are interpreted as the prompt and the user's characters as the response.  This means control codes like ^C won't be captured, or basically any input that doesn't end in a new line. 
+
 = Examples =
 
 This connects to `myserver.com` as `myuser` and generates a script named `myscript.py`
 {{{
 java -jar enchanter-python-VERSION.jar -l -h myserver.com -u myuser myscript.py  
 }}}
-
