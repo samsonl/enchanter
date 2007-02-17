@@ -41,10 +41,10 @@ public class DefaultSSHTest extends TestCase {
     }
 
     public void testSendLine() throws IOException {
-        conn.setInputStream(new ByteArrayInputStream("foo\r\n".getBytes()));
+        conn.setInputStream(new ByteArrayInputStream("foo\n".getBytes()));
         ssh.connect(null, null);
         ssh.sendLine("foo");
-        assertEquals("foo\r\n", conn.dumpOut());
+        assertEquals("foo\n", conn.dumpOut());
     }
 
     public void testSleep() throws InterruptedException {

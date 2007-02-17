@@ -1,5 +1,7 @@
 package org.twdata.enchanter;
 
+import java.io.PrintWriter;
+
 /**
  * The stream filter is the base interface for classes that want a copy of the
  * bytes read from and written to the stream.
@@ -20,5 +22,7 @@ public interface StreamListener {
      * @param s The data
      */
     public void hasWritten(byte[] b);
+    
+    public void init(PrintWriter writer);
 
 }

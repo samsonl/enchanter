@@ -46,6 +46,9 @@ public class DefaultSSH implements SSH {
     private void setupStreams() {
         this.in = new BufferedInputStream(sshConnection.getInputStream());
         this.out = new PrintWriter(sshConnection.getOutputStream());
+        for (StreamListener listener : streamListeners) {
+            listener.init(this.out);
+        }
     }
 
     public void connect(String host, int port, String username,
@@ -82,6 +85,9 @@ public class DefaultSSH implements SSH {
                     // Not usually necessary
                     // System.out.print(new String(b));
                 }
+
+                public void init(PrintWriter writer) {
+                }
             });
         }
     }
@@ -103,7 +109,7 @@ public class DefaultSSH implements SSH {
         text = text.replace("^C", String.valueOf((char) 3));
         text = text.replace("^M", "\r\n");
         if (eol) {
-            out.print(text+"\r\n");
+            out.print(text+"\n");
             out.flush();
             getLine();
         } else {
