@@ -21,10 +21,9 @@ public class Main {
      * @throws BSFException
      */
     public static void main(String[] args) throws EvalError, FileNotFoundException, IOException {
-        if (args.length == 0) {
-            System.err.println("Usage: java -jar enchanter.jar SCRIPT_PATH");
-            System.exit(1);
-        }
+        ScriptRecorder rec = new BeanShellScriptRecorder();
+        
+        args = rec.processForLearningMode(args);
 
         String filePath = args[0];
 

@@ -4,19 +4,19 @@
   <parent>
       <groupId>org.twdata.enchanter</groupId>
       <artifactId>enchanter-parent</artifactId>
-      <version>0.3</version>
+      <version>0.4-SNAPSHOT</version>
   </parent>
  
   <groupId>org.twdata.enchanter</groupId>
   <artifactId>enchanter-jar-parent</artifactId>
   <packaging>pom</packaging>
-  <version>0.3</version>
+  <version>0.4-SNAPSHOT</version>
   <name>Enchanter Jar Parent</name>
   <dependencies>
     <dependency>
       <groupId>org.twdata.enchanter</groupId>
 	  <artifactId>enchanter-core</artifactId>
-	  <version>0.3</version>
+	  <version>0.4-SNAPSHOT</version>
     </dependency>
   </dependencies>
   <build>
