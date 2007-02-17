@@ -1,0 +1,14 @@
+ssh.debug = true;
+ssh.connect("www.twdata.org", "mrdon");
+//ssh.setTimeout(2000);
+ssh.respond(":~>", "ls -l\n");
+ssh.waitFor("incoming\r\n");
+print("\n"+"next line:"+ssh.getLine()+":");
+ssh.respond(":~>", null);
+
+id = ssh.waitForMux(new String[]{":~>","bar"});
+ssh.sendLine("top");
+ssh.waitFor("Tasks", true);
+print("\n Last line:"+ssh.lastLine());
+ssh.disconnect();
+
