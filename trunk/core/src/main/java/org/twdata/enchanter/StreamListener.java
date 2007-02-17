@@ -23,6 +23,10 @@ public interface StreamListener {
      */
     public void hasWritten(byte[] b);
     
+    /**
+     * Initializes listener
+     * @param writer the writer to write to the ssh session with
+     */
     public void init(PrintWriter writer);
 
 }
