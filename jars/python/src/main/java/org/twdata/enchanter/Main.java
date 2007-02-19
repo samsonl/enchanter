@@ -6,7 +6,7 @@ import org.python.util.PythonInterpreter;
 import org.twdata.enchanter.impl.DefaultSSH;
 
 /**
- * Executes the passed script using Ruby
+ * Executes the passed script using Python
  */
 public class Main {
 
@@ -19,6 +19,7 @@ public class Main {
 
         PythonInterpreter interp = new PythonInterpreter();
         interp.set("ssh", new DefaultSSH());
+        interp.set("args", args);
         interp.execfile(filePath);
         
 

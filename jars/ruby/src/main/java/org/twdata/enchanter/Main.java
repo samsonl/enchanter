@@ -33,6 +33,7 @@ public class Main {
 
         try {
             runtime.getGlobalVariables().set(GlobalVariable.variableName("ssh"), ssh);
+            runtime.getGlobalVariables().set(GlobalVariable.variableName("args"), JavaEmbedUtils.javaToRuby(runtime, args));
             runtime.loadFile(new File(filePath), false);
         } catch (JumpException je) {
             if (je.getJumpType() == JumpException.JumpType.RaiseJump) {

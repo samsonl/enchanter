@@ -31,6 +31,7 @@ public class Main {
         
         Interpreter i = new Interpreter();
         i.set("ssh", ssh);
+        i.set("args", args);
         i.source(filePath);
     }
 
