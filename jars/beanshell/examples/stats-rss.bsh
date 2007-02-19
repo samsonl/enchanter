@@ -54,8 +54,15 @@ writeLogToRss(in, out) {
   	rss.println("<link>ssh://"+server+"</link>");
   	rss.println("<description>Free web building tutorials</description>");
 
+	
+	lines = new LinkedList();
 	while ((line = log.readLine()) != null) {
-		System.out.println("line:"+line);
+	    lines.addFirst(line);
+	    if (lines.size() > 20)
+	    	lines.removeLast();
+	}
+	
+	for (line : lines) {
 		vals = line.split("\\|");
 		rss.println("<item>");
 		rss.println("<title>load average: "+vals[1]+", "+vals[2]+", "+vals[3]+"</title>");
@@ -66,8 +73,9 @@ writeLogToRss(in, out) {
 		rss.println("Swap: "+vals[7]+" total, "+vals[8]+" used, "+vals[9]+" free<br />");
 		rss.println("Top Process: "+vals[10]+" "+vals[11]+"% CPU, "+vals[12]+"% Mem");
 		rss.println("</description>");
-		rss.println("</item>");
-	}
+		rss.println("</item>");	
+	}    	
+	
 	rss.println("</channel>");
 	rss.println("</rss>");
 		
