@@ -27,13 +27,16 @@ public class GanymedSSHLibrary implements SSHLibrary {
     }
 
     public void connect(String host, int port, String username,
-            final String password) throws IOException {
+            String password) throws IOException {
+        connect(host, port, username, password, null);
+    }
+    
+    public void connect(String host, int port, String username,
+            final String password, String privateKeyPath) throws IOException {
         /* Create a connection instance */
-
         final Connection conn = new Connection(host, port);
 
         /* Now connect */
-
         conn.connect();
 
         /*
@@ -42,32 +45,62 @@ public class GanymedSSHLibrary implements SSHLibrary {
          * stage." then please check the FAQ.
          */
         
-        /*
-        * Authenticate. If you get an IOException saying something like
-        * "Authentication method password not supported by the server at this
-        * stage." then please check the FAQ.
-        */
+        boolean triedCustomPublicKey = false;
+        boolean triedStandardDSAPublicKey = false;
+        boolean triedStandardRSAPublicKey = false;
+        boolean triedPassword = false;
+        boolean triedPasswordInteractive = false;
 
-        File home = new File(System.getProperty("user.home"));
-
-        boolean isAuthenticated = conn.authenticateWithPublicKey(username,
-               new File(home, ".ssh/id_dsa"), password);
-
-        if (!isAuthenticated) {
-            isAuthenticated = conn.authenticateWithKeyboardInteractive(username, new InteractiveCallback() {
-    
-                public String[] replyToChallenge(String name, String instruction, int numPrompts, String[] prompt, boolean[] echo) throws Exception {
-                    String[] responses = new String[numPrompts];
-                    for (int x=0; x < numPrompts; x++) {
-                        responses[x] = password;
-                    }
-                    return responses;
-                }
-            });
+        boolean isAuthenticated = false;
+        if (privateKeyPath != null) {
+            triedCustomPublicKey = true;
+            isAuthenticated = conn.authenticateWithPublicKey(username,
+                    new File(privateKeyPath), password);
+        } else {
+            File home = new File(System.getProperty("user.home"));
+            triedStandardDSAPublicKey = true;
+            isAuthenticated = conn.authenticateWithPublicKey(username,
+                   new File(home, ".ssh/id_dsa"), password);
+            if (!isAuthenticated) {
+                triedStandardRSAPublicKey = true;
+                isAuthenticated = conn.authenticateWithPublicKey(username,
+                        new File(home, ".ssh/id_rsa"), password);
+            }
         }
 
         if (!isAuthenticated) {
-            throw new IOException("Authentication failed.");
+            try {
+                triedPassword = true;
+                isAuthenticated = conn.authenticateWithPassword(username, password);
+            } catch (IOException ex) {
+                // Password authentication probably not supported
+            }
+            if (!isAuthenticated) {
+                try {
+                    triedPasswordInteractive = true;
+                    isAuthenticated = conn.authenticateWithKeyboardInteractive(username, new InteractiveCallback() {
+            
+                        public String[] replyToChallenge(String name, String instruction, int numPrompts, String[] prompt, boolean[] echo) throws Exception {
+                            String[] responses = new String[numPrompts];
+                            for (int x=0; x < numPrompts; x++) {
+                                responses[x] = password;
+                            }
+                            return responses;
+                        }
+                    });
+                } catch (IOException ex) {
+                    // Password interactive probably not supported
+                }
+            }
+        }
+
+        if (!isAuthenticated) {
+            throw new IOException("Authentication failed.  Tried \n"+
+                    (triedCustomPublicKey ? "\tpublic key using "+privateKeyPath+"\n" : "") +
+                    (triedStandardDSAPublicKey ? "\tpublic key using ~/.ssh/id_dsa\n" : "") +
+                    (triedStandardRSAPublicKey ? "\tpublic key using ~/.ssh/id_rsa\n" : "") +
+                    (triedPassword ? "\tpassword\n" : "") +
+                    (triedPasswordInteractive ? "\tpassword interactive" : ""));
         }
 
         /* Create a session */

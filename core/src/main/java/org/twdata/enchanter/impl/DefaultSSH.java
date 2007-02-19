@@ -57,6 +57,12 @@ public class DefaultSSH implements SSH {
         setupStreams();
     }
     
+    public void connect(String host, int port, String username,
+            final String password, String privateKeyPath) throws IOException {
+        sshConnection.connect(host, port, username, password, privateKeyPath);
+        setupStreams();
+    }
+    
     public void setSSHConnection(SSHLibrary conn) {
         this.sshConnection = conn;
     }

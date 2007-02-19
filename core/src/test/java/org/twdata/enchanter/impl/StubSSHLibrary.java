@@ -45,4 +45,9 @@ public class StubSSHLibrary implements SSHLibrary {
         outputStream = new ByteArrayOutputStream();
         return data;
     }
+
+    public void connect(String host, int port, String username, String password, String privateKeyPath) throws IOException {
+        // TODO Auto-generated method stub
+        
+    }
 }
