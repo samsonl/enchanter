@@ -4,19 +4,26 @@
   <parent>
       <groupId>org.twdata.enchanter</groupId>
       <artifactId>enchanter-parent</artifactId>
-      <version>0.5-SNAPSHOT</version>
+      <version>0.5</version>
   </parent>
  
   <groupId>org.twdata.enchanter</groupId>
   <artifactId>enchanter-jar-parent</artifactId>
   <packaging>pom</packaging>
-  <version>0.5-SNAPSHOT</version>
+  <version>0.5</version>
   <name>Enchanter Jar Parent</name>
+
+  <modules>
+      <module>beanshell</module>
+      <module>ruby</module>
+      <module>python</module>
+  </modules>
+  
   <dependencies>
     <dependency>
       <groupId>org.twdata.enchanter</groupId>
 	  <artifactId>enchanter-core</artifactId>
-	  <version>0.5-SNAPSHOT</version>
+	  <version>0.5</version>
     </dependency>
   </dependencies>
   <build>
