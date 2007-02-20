@@ -4,15 +4,13 @@
   <groupId>org.twdata.enchanter</groupId>
   <artifactId>enchanter-parent</artifactId>
   <packaging>pom</packaging>
-  <version>0.5-SNAPSHOT</version>
+  <version>0.5</version>
   <name>Enchanter</name>
   <url>http://code.google.com/p/enchanter</url>
 
   <modules>
       <module>core</module>
-      <module>jars/beanshell</module>
-      <module>jars/ruby</module>
-      <module>jars/python</module>
+      <module>jars</module>
   </modules>
 
 
