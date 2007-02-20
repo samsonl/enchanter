@@ -4,14 +4,14 @@
   <parent>
       <groupId>org.twdata.enchanter</groupId>
       <artifactId>enchanter-jar-parent</artifactId>
-      <version>0.5</version>
+      <version>0.6-SNAPSHOT</version>
   </parent>
  
  
   <groupId>org.twdata.enchanter</groupId>
   <artifactId>enchanter-ruby</artifactId>
   <packaging>jar</packaging>
-  <version>0.5</version>
+  <version>0.6-SNAPSHOT</version>
   <name>Enchanter with Ruby</name>
   <dependencies>
     <dependency>
