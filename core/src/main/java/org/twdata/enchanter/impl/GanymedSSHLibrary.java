@@ -58,13 +58,21 @@ public class GanymedSSHLibrary implements SSHLibrary {
                     new File(privateKeyPath), password);
         } else {
             File home = new File(System.getProperty("user.home"));
-            triedStandardDSAPublicKey = true;
-            isAuthenticated = conn.authenticateWithPublicKey(username,
-                   new File(home, ".ssh/id_dsa"), password);
-            if (!isAuthenticated) {
-                triedStandardRSAPublicKey = true;
+            try {
+                triedStandardDSAPublicKey = true;
                 isAuthenticated = conn.authenticateWithPublicKey(username,
-                        new File(home, ".ssh/id_rsa"), password);
+                       new File(home, ".ssh/id_dsa"), password);
+            } catch (IOException ex) {
+                // dsa key probably can't be found
+            }
+            if (!isAuthenticated) {
+                try {
+                    triedStandardRSAPublicKey = true;
+                    isAuthenticated = conn.authenticateWithPublicKey(username,
+                            new File(home, ".ssh/id_rsa"), password);
+                } catch (IOException ex) {
+                    // rsa key probably can't be found
+                }
             }
         }
 
