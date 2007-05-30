@@ -1,14 +1,27 @@
-ssh.debug = true;
-ssh.connect("www.twdata.org", "mrdon");
-//ssh.setTimeout(2000);
-ssh.respond(":~>", "ls -l\n");
-ssh.waitFor("incoming\r\n");
-print("\n"+"next line:"+ssh.getLine()+":");
-ssh.respond(":~>", null);
+import java.util.regex.*;
 
-id = ssh.waitForMux(new String[]{":~>","bar"});
-ssh.sendLine("top");
-ssh.waitFor("Tasks", true);
-print("\n Last line:"+ssh.lastLine());
-ssh.disconnect();
+lib = new org.twdata.enchanter.impl.CommonsTelnetLibrary();
+lib.stripAnsi = true;
+conn.connectionLibrary = lib;
+conn.debug = true;
+conn.endOfLine = "\n";
+
+ptn = Pattern.compile("<([A-Z])>\\s+([^<]+)");
+
+conn.connect("mytradewars.com", 23);
+conn.respond("none):", "test\n");
+conn.waitFor("<A>", true);
+line = conn.lastLine();
+do {
+  m = ptn.matcher(line);
+  while (m.find()) {
+    print("Game: "+m.group(1)+" - "+m.group(2));
+  }    
+  line = conn.getLine();
+} while (line.trim().length() > 0);
+
+
+conn.waitFor("Quit", true);
+print("\n Last line:"+conn.lastLine());
+conn.disconnect();
 

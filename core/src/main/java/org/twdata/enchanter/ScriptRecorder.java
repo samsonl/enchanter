@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 
-import org.twdata.enchanter.impl.DefaultSSH;
+import org.twdata.enchanter.impl.DefaultStreamConnection;
 
 /**
  * Stream reader that helps create a script.  Meant to be subclassed by scripting
@@ -69,14 +69,14 @@ public class ScriptRecorder implements StreamListener {
             String password = (String) parser.getOptionValue(optPassword, "");
             setPromptSize(((Integer) parser.getOptionValue(optPromptSize, Integer.valueOf(10))).intValue());
             
-            SSH ssh = new DefaultSSH();
-            ssh.addStreamListener(this);
-            ssh.connect(host, port, username, password);
+            StreamConnection streamConnection = new DefaultStreamConnection();
+            streamConnection.addStreamListener(this);
+            streamConnection.connect(host, port, username, password);
             startRecording(parser.getRemainingArgs()[0], host, port, username, password);
             ConsoleReader reader = new ConsoleReader();
             Thread t = new Thread(reader);
             t.start();
-            ssh.waitFor("asfdasfasfdSomeStringThatDoesntExistasdfasdf");
+            streamConnection.waitFor("asfdasfasfdSomeStringThatDoesntExistasdfasdf");
             endRecording();
             System.exit(0);
         }

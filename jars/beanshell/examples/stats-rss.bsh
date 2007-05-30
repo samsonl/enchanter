@@ -12,34 +12,34 @@ printValues(regex, raw, fileWriter) {
 
 addLogEntry(fileWriter) {
 	
-	ssh.connect(server, user);
-	ssh.setTimeout(20000);
-	ssh.waitFor(prompt);
-	ssh.sendLine("date");
-	fileWriter.write(ssh.getLine());
-	ssh.sendLine("top -b -n 1");
+	conn.connect(server, user);
+	conn.setTimeout(20000);
+	conn.waitFor(prompt);
+	conn.sendLine("date");
+	fileWriter.write(conn.getLine());
+	conn.sendLine("top -b -n 1");
 	
-	printValues(".*average: ([0-9.]+), ([0-9.]+), ([0-9.]+)", ssh.getLine(), fileWriter);
+	printValues(".*average: ([0-9.]+), ([0-9.]+), ([0-9.]+)", conn.getLine(), fileWriter);
 	
 	// swallow tasks
-	ssh.getLine();
+	conn.getLine();
 	// swallow cpu
-	ssh.getLine();
+	conn.getLine();
 	
-	printValues("Mem:\\s+([0-9k]+) total,\\s+([0-9k]+) used,\\s+([0-9k]+).*", ssh.getLine(), fileWriter);
-	printValues("Swap:\\s+([0-9k]+) total,\\s+([0-9k]+) used,\\s+([0-9k]+).*", ssh.getLine(), fileWriter);
+	printValues("Mem:\\s+([0-9k]+) total,\\s+([0-9k]+) used,\\s+([0-9k]+).*", conn.getLine(), fileWriter);
+	printValues("Swap:\\s+([0-9k]+) total,\\s+([0-9k]+) used,\\s+([0-9k]+).*", conn.getLine(), fileWriter);
 	
 	// swallow empty line
-	ssh.getLine();
+	conn.getLine();
 	// swallow proc headers
-	ssh.getLine();
+	conn.getLine();
 	
-	cols = ssh.getLine().split("\\s+");
+	cols = conn.getLine().split("\\s+");
 	fileWriter.write("|"+cols[cols.length-1]+"|"+cols[cols.length-4]+"|"+cols[cols.length-3]);
 	
 	fileWriter.write("\n");
 	
-	ssh.disconnect();
+	conn.disconnect();
 }
 
 writeLogToRss(in, out) {
@@ -51,7 +51,7 @@ writeLogToRss(in, out) {
 
     rss.println("<channel>");
   	rss.println("<title>"+server+" Stats</title>");
-  	rss.println("<link>ssh://"+server+"</link>");
+  	rss.println("<link>conn://"+server+"</link>");
   	rss.println("<description>Free web building tutorials</description>");
 
 	

@@ -3,23 +3,32 @@ package org.twdata.enchanter;
 import java.io.IOException;
 
 /**
- * Represents an SSH server connection implementation
+ * Represents an StreamConnection server connection implementation
  */
-public interface SSH {
+public interface StreamConnection {
 
-    /**
-     * Connect to the remote SSH server using public key authentication
+	/**
+     * Connect to the remote StreamConnection server using no authentication
      * 
-     * @param host The remote SSH server
+     * @param host The remote StreamConnection server
+     * @param port The port to use
+     * @throws IOException If a connection cannot be made
+     */
+	public void connect(String host, int port) throws IOException;
+	
+    /**
+     * Connect to the remote StreamConnection server using public key authentication
+     * 
+     * @param host The remote StreamConnection server
      * @param username The user name on the server
      * @throws IOException If a connection cannot be made
      */
     public void connect(String host, String username) throws IOException;
 
     /**
-     * Connect to the remote SSH server using public key or password authentication
+     * Connect to the remote StreamConnection server using public key or password authentication
      * 
-     * @param host The remote SSH server
+     * @param host The remote StreamConnection server
      * @param username The user name on the server
      * @throws IOException If a connection cannot be made
      */
@@ -27,10 +36,10 @@ public interface SSH {
             throws IOException;
     
     /**
-     * Connect to the remote SSH server using public key or password authentication
+     * Connect to the remote StreamConnection server using public key or password authentication
      * 
-     * @param host The remote SSH server
-     * @param port The remote SSH server port
+     * @param host The remote StreamConnection server
+     * @param port The remote StreamConnection server port
      * @param username The user name on the server
      * @param password The password to use for the public key or password authentication
      * @param privateKeyPath The path to the private key
@@ -140,9 +149,10 @@ public interface SSH {
     public void sleep(int millis) throws InterruptedException;
 
     /**
-     * Disconnects from the remote SSH server
+     * Disconnects from the remote StreamConnection server
+     * @throws IOException 
      */
-    public void disconnect();
+    public void disconnect() throws IOException;
 
     /**
      * Adds a stream listener to be notified of each byte read and written.
@@ -158,4 +168,6 @@ public interface SSH {
      * @param debug True for debugging mode
      */
     public void setDebug(boolean debug);
+
+	public void setEndOfLine(String eol);
 }

@@ -3,7 +3,8 @@ package org.twdata.enchanter;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-import org.twdata.enchanter.impl.DefaultSSH;
+import org.twdata.enchanter.impl.CommonsTelnetLibrary;
+import org.twdata.enchanter.impl.DefaultStreamConnection;
 
 import bsh.EvalError;
 import bsh.Interpreter;
@@ -27,10 +28,14 @@ public class Main {
 
         String filePath = args[0];
 
-        SSH ssh = new DefaultSSH();
+        DefaultStreamConnection streamConnection = new DefaultStreamConnection();
         
         Interpreter i = new Interpreter();
-        i.set("ssh", ssh);
+        
+        // deprecated
+        i.set("ssh", streamConnection);
+        
+        i.set("conn", streamConnection);
         i.set("args", args);
         i.source(filePath);
     }

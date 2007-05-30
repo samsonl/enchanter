@@ -2,24 +2,24 @@ server = "www.twdata.org"
 user = "mrdon"
 prompt = ":~>"
 
-ssh.connect(server, user);
-ssh.setTimeout(20000);
-ssh.waitFor(prompt);
-ssh.sendLine("top");
+conn.connect(server, user);
+conn.setTimeout(20000);
+conn.waitFor(prompt);
+conn.sendLine("top");
 print "==== Top ====\n"
-print ssh.getLine()
-print ssh.getLine()
-print ssh.getLine()
-print ssh.getLine()
-ssh.send("^C")
+print conn.getLine()
+print conn.getLine()
+print conn.getLine()
+print conn.getLine()
+conn.send("^C")
 
-ssh.waitFor(prompt)
+conn.waitFor(prompt)
 print "\n==== Disk Usage ====\n"
-ssh.sendLine("df")
+conn.sendLine("df")
 while 1:
-    id = ssh.waitForMux(["\r\n", prompt])
+    id = conn.waitForMux(["\r\n", prompt])
     if id == 0 :
-        print ssh.lastLine()
+        print conn.lastLine()
     else:
         break
-ssh.disconnect()
+conn.disconnect()

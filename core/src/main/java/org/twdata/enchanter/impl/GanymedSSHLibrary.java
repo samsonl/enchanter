@@ -9,7 +9,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.twdata.enchanter.SSHLibrary;
+import javax.naming.OperationNotSupportedException;
+
+import org.twdata.enchanter.ConnectionLibrary;
 
 import ch.ethz.ssh2.Connection;
 import ch.ethz.ssh2.InteractiveCallback;
@@ -18,9 +20,13 @@ import ch.ethz.ssh2.Session;
 /**
  * An implementation of an ssh library using Ganymed
  */
-public class GanymedSSHLibrary implements SSHLibrary {
+public class GanymedSSHLibrary implements ConnectionLibrary {
 
     private Session sess;
+    
+    public void connect(String host, int port) throws OperationNotSupportedException {
+		throw new OperationNotSupportedException();
+	}
     
     public void connect(String host, String username) throws IOException {
         connect(host, 22, username, "");
@@ -137,4 +143,6 @@ public class GanymedSSHLibrary implements SSHLibrary {
         sess.close();
         sess = null;
     }
+
+	
 }

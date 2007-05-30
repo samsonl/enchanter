@@ -6,20 +6,20 @@ import java.io.IOException;
 
 import junit.framework.TestCase;
 
-public class DefaultSSHTest extends TestCase {
+public class DefaultStreamConnectionTest extends TestCase {
 
-    DefaultSSH ssh;
-    StubSSHLibrary conn;
+    DefaultStreamConnection ssh;
+    StubConnectionLibrary conn;
     
-    public DefaultSSHTest(String arg0) {
+    public DefaultStreamConnectionTest(String arg0) {
         super(arg0);
     }
 
     protected void setUp() throws Exception {
         super.setUp();
-        ssh = new DefaultSSH();
-        conn = new StubSSHLibrary();
-        ssh.setSSHConnection(conn);
+        ssh = new DefaultStreamConnection();
+        conn = new StubConnectionLibrary();
+        ssh.setConnectionLibrary(conn);
         ssh.connect("host", "username");
     }
 
@@ -41,10 +41,10 @@ public class DefaultSSHTest extends TestCase {
     }
 
     public void testSendLine() throws IOException {
-        conn.setInputStream(new ByteArrayInputStream("foo\n".getBytes()));
+        conn.setInputStream(new ByteArrayInputStream("foo\r\n".getBytes()));
         ssh.connect(null, null);
         ssh.sendLine("foo");
-        assertEquals("foo\n", conn.dumpOut());
+        assertEquals("foo\r\n", conn.dumpOut());
     }
 
     public void testSleep() throws InterruptedException {
@@ -57,6 +57,22 @@ public class DefaultSSHTest extends TestCase {
         conn.setInputStream(new ByteArrayInputStream("foo\r\nbar\r\njoo".getBytes()));
         ssh.connect(null, null);
         assertTrue(ssh.waitFor("bar", false));
+        assertTrue(ssh.waitFor("jo", false));
+        assertFalse(ssh.waitFor("asdf", false));
+        
+        conn.setInputStream(new ByteArrayInputStream("foo\r\nbar\r\njoo".getBytes()));
+        ssh.connect(null, null);
+        assertTrue(ssh.waitFor("bar", true));
+        assertTrue(ssh.waitFor("jo", true));
+        assertFalse(ssh.waitFor("asdf", true));
+    }
+    
+    public void testWaitForWithRespond() throws IOException {
+        conn.setInputStream(new ByteArrayInputStream("foo\r\nbar\r\njoo".getBytes()));
+        ssh.connect(null, null);
+        ssh.respond("bar", "jim");
+        assertTrue(ssh.waitFor("oo", false));
+        assertEquals("foo", ssh.lastLine());
         assertTrue(ssh.waitFor("jo", false));
         assertFalse(ssh.waitFor("asdf", false));
         

@@ -11,14 +11,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.twdata.enchanter.SSH;
-import org.twdata.enchanter.SSHLibrary;
+import javax.naming.OperationNotSupportedException;
+
+import org.twdata.enchanter.StreamConnection;
+import org.twdata.enchanter.ConnectionLibrary;
 import org.twdata.enchanter.StreamListener;
 
 /**
- * Default implementation of SSH connection and parsing methods
+ * Default implementation of StreamConnection connection and parsing methods
  */
-public class DefaultSSH implements SSH {
+public class DefaultStreamConnection implements StreamConnection {
     
     private BufferedInputStream in;
     private PrintWriter out;
@@ -27,25 +29,39 @@ public class DefaultSSH implements SSH {
     private List<Prompt> waitFor = new ArrayList<Prompt>();
     List<StreamListener> streamListeners = new ArrayList<StreamListener>();
 
+    private String endOfLine = "\r\n";
     private char lastChar;
     private boolean alive = true;
     private StringBuilder lastLine = new StringBuilder();
     private Thread timeoutThread;
     private int timeout = 0;
-    private SSHLibrary sshConnection;
+    private ConnectionLibrary connectionLibrary;
 
-    public DefaultSSH() {
-        this.sshConnection = new GanymedSSHLibrary();
+    public DefaultStreamConnection() {
+        this.connectionLibrary = new GanymedSSHLibrary();
     }
     
+    public void connect(String host, int port) throws IOException {
+    	try {
+			connectionLibrary.connect(host, port);
+		} catch (OperationNotSupportedException e) {
+			throw new RuntimeException(e);
+		}
+        setupStreams();
+	}
+    
     public void connect(String host, String username) throws IOException {
-        sshConnection.connect(host, username);
+        try {
+			connectionLibrary.connect(host, username);
+		} catch (OperationNotSupportedException e) {
+			throw new RuntimeException(e);
+		}
         setupStreams();
     }
 
     private void setupStreams() {
-        this.in = new BufferedInputStream(sshConnection.getInputStream());
-        this.out = new PrintWriter(sshConnection.getOutputStream());
+        this.in = new BufferedInputStream(connectionLibrary.getInputStream());
+        this.out = new PrintWriter(connectionLibrary.getOutputStream());
         for (StreamListener listener : streamListeners) {
             listener.init(this.out);
         }
@@ -53,26 +69,38 @@ public class DefaultSSH implements SSH {
 
     public void connect(String host, int port, String username,
             final String password) throws IOException {
-        sshConnection.connect(host, port, username, password);
+        try {
+        	connectionLibrary.connect(host, port, username, password);
+        } catch (OperationNotSupportedException e) {
+			throw new RuntimeException(e);
+		}
         setupStreams();
     }
     
     public void connect(String host, int port, String username,
             final String password, String privateKeyPath) throws IOException {
-        sshConnection.connect(host, port, username, password, privateKeyPath);
+        try {
+        	connectionLibrary.connect(host, port, username, password, privateKeyPath);
+        } catch (OperationNotSupportedException e) {
+			throw new RuntimeException(e);
+		}
         setupStreams();
     }
     
-    public void setSSHConnection(SSHLibrary conn) {
-        this.sshConnection = conn;
+    public void setEndOfLine(String eol) {
+    	this.endOfLine = eol;
     }
     
-    public void disconnect() {
+    public void setConnectionLibrary(ConnectionLibrary lib) {
+        this.connectionLibrary = lib;
+    }
+    
+    public void disconnect() throws IOException {
         if (timeoutThread != null) {
             timeoutThread.interrupt();
         }
         alive = false;
-        sshConnection.disconnect();
+        connectionLibrary.disconnect();
     }
     
     public void addStreamListener(StreamListener listener) {
@@ -113,9 +141,9 @@ public class DefaultSSH implements SSH {
     
     private void print(String text, boolean eol) throws IOException {
         text = text.replace("^C", String.valueOf((char) 3));
-        text = text.replace("^M", "\r\n");
+        text = text.replace("^M", endOfLine);
         if (eol) {
-            out.print(text+"\n");
+            out.print(text+endOfLine);
             out.flush();
             getLine();
         } else {
@@ -174,7 +202,7 @@ public class DefaultSSH implements SSH {
     }
     
     public String getLine() throws IOException {
-        if (waitFor("\r\n", false)) {
+        if (waitFor(endOfLine, false)) {
             return lastLine();
         }
         return null;
@@ -182,7 +210,8 @@ public class DefaultSSH implements SSH {
 
     public int readFromStream(boolean readLineOnMatch) throws IOException {
         int result = -1;
-        int data;
+        byte[] data = new byte[1];
+        int length = 0;
         boolean readTillEndOfLine = false;
         if (timeout > 0) {
             timeoutThread = new Thread() {
@@ -197,25 +226,29 @@ public class DefaultSSH implements SSH {
             };
             timeoutThread.start();
         }
-        while (alive && (data = in.read()) >= 0) {
-            for (StreamListener listener : streamListeners) {
-                listener.hasRead((byte) data);
-            }
-            char c = (char) data;
-            if (readTillEndOfLine && (c == '\r' || c == '\n'))
-                break;
-
-            int match = lookForMatch(c);
-            if (match != -1) {
-                result = match;
-                if (readLineOnMatch && (c != '\r' && c != '\n')) {
-                    readTillEndOfLine = true;
-                } else {
-                    break;
+        outer:
+        while (alive && (length = in.read(data)) >= 0) {
+            
+            for (int x=0; x<length; x++) {
+                char c = (char) data[x];
+                for (StreamListener listener : streamListeners) {
+                    listener.hasRead((byte) data[x]);
                 }
-            } else {
-                lookForResponse((char) data);
-                lastChar = (char) data;
+                if (readTillEndOfLine && (c == '\r' || c == '\n'))
+                    break outer;
+    
+                int match = lookForMatch(c);
+                if (match != -1) {
+                    result = match;
+                    if (readLineOnMatch && (c != '\r' && c != '\n')) {
+                        readTillEndOfLine = true;
+                    } else {
+                        break outer;
+                    }
+                } else {
+                    lookForResponse((char) data[x]);
+                    lastChar = (char) data[x];
+                }
             }
         }
         reset();
@@ -238,7 +271,7 @@ public class DefaultSSH implements SSH {
             } else {
                 // if the current character did not match reset
                 prompt.resetPos();
-                if (s == '\n' && lastChar == '\r') {
+                if (s == '\n' || s == '\r') {
                     lastLine.setLength(0);
                 }
             }

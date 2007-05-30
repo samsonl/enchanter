@@ -17,6 +17,13 @@
       <groupId>ch.ethz.ganymed</groupId>
       <artifactId>ganymed-ssh2</artifactId>
       <version>build210</version>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>commons-net</groupId>
+      <artifactId>commons-net</artifactId>
+      <version>1.4.1</version>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>junit</groupId>

@@ -14,7 +14,7 @@ import org.jruby.exceptions.RaiseException;
 import org.jruby.javasupport.JavaEmbedUtils;
 import org.jruby.runtime.GlobalVariable;
 import org.jruby.runtime.builtin.IRubyObject;
-import org.twdata.enchanter.impl.DefaultSSH;
+import org.twdata.enchanter.impl.DefaultStreamConnection;
 
 /**
  * Executes the passed script using Ruby
@@ -29,10 +29,13 @@ public class Main {
         String filePath = args[0];
 
         IRuby runtime = JavaEmbedUtils.initialize(Collections.singletonList("."));
-        IRubyObject ssh = JavaEmbedUtils.javaToRuby(runtime, new DefaultSSH());
+        IRubyObject conn = JavaEmbedUtils.javaToRuby(runtime, new DefaultStreamConnection());
 
         try {
-            runtime.getGlobalVariables().set(GlobalVariable.variableName("ssh"), ssh);
+        	// deprecated
+            runtime.getGlobalVariables().set(GlobalVariable.variableName("ssh"), conn);
+            
+            runtime.getGlobalVariables().set(GlobalVariable.variableName("conn"), conn);
             runtime.getGlobalVariables().set(GlobalVariable.variableName("args"), JavaEmbedUtils.javaToRuby(runtime, args));
             runtime.loadFile(new File(filePath), false);
         } catch (JumpException je) {
