@@ -8,9 +8,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import org.twdata.enchanter.SSHLibrary;
+import javax.naming.OperationNotSupportedException;
 
-public class StubSSHLibrary implements SSHLibrary {
+import org.twdata.enchanter.ConnectionLibrary;
+
+public class StubConnectionLibrary implements ConnectionLibrary {
 
     InputStream inputStream;
     OutputStream outputStream = new ByteArrayOutputStream();
@@ -50,4 +52,9 @@ public class StubSSHLibrary implements SSHLibrary {
         // TODO Auto-generated method stub
         
     }
+
+	public void connect(String host, int port) throws IOException, OperationNotSupportedException {
+		// TODO Auto-generated method stub
+		
+	}
 }

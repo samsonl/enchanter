@@ -6,18 +6,18 @@ localRssPath = "";
 remoteRssPath = "http://myserver.com/feeds/";
 remoteLogPath = "/usr/local/tomcat/tomcat-confluence/logs/catalina.out";
 
-ssh.connect(server, user);
-ssh.setTimeout(20000);
-ssh.waitFor(prompt);
-ssh.sendLine("tail -n 5000 "+remoteLogPath);
+conn.connect(server, user);
+conn.setTimeout(20000);
+conn.waitFor(prompt);
+conn.sendLine("tail -n 5000 "+remoteLogPath);
 
 entries = new ArrayList();
 entry = "";
-id = ssh.waitForMux(new String[]{"ERROR", prompt});
+id = conn.waitForMux(new String[]{"ERROR", prompt});
 while (id == 0) {
-    id = ssh.waitForMux(new String[]{"\r\n", prompt});
+    id = conn.waitForMux(new String[]{"\r\n", prompt});
     if (id == 0) {
-		line = ssh.lastLine();
+		line = conn.lastLine();
 		if (line.contains("WARN") || line.contains("DEBUG") || line.contains("INFO")) {
 			if (entry != null) {
 				entries.add(entry);
@@ -73,6 +73,6 @@ rss.println("</channel>");
 rss.println("</rss>");
 
 rss.close();
-ssh.disconnect();
+conn.disconnect();
 
 

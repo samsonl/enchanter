@@ -3,7 +3,7 @@ package org.twdata.enchanter;
 import java.io.IOException;
 
 import org.python.util.PythonInterpreter;
-import org.twdata.enchanter.impl.DefaultSSH;
+import org.twdata.enchanter.impl.DefaultStreamConnection;
 
 /**
  * Executes the passed script using Python
@@ -18,7 +18,11 @@ public class Main {
         String filePath = args[0];
 
         PythonInterpreter interp = new PythonInterpreter();
-        interp.set("ssh", new DefaultSSH());
+        StreamConnection conn = new DefaultStreamConnection();
+        
+        // deprecated
+        interp.set("ssh", conn);
+        interp.set("conn", conn);
         interp.set("args", args);
         interp.execfile(filePath);
         

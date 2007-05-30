@@ -7,13 +7,13 @@ import java.io.InputStream;
 
 import junit.framework.TestCase;
 
-public class DefaultSSHPerformanceTest extends TestCase {
+public class DefaultStreamConnectionPerformanceTest extends TestCase {
 
-    DefaultSSH ssh;
-    StubSSHLibrary conn;
+    DefaultStreamConnection ssh;
+    StubConnectionLibrary conn;
     byte[] bibleBytes;
     
-    public DefaultSSHPerformanceTest(String arg0) throws IOException {
+    public DefaultStreamConnectionPerformanceTest(String arg0) throws IOException {
         super(arg0);
         InputStream in = getClass().getResourceAsStream("/kjv10.txt");
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
@@ -28,10 +28,10 @@ public class DefaultSSHPerformanceTest extends TestCase {
 
     protected void setUp() throws Exception {
         super.setUp();
-        ssh = new DefaultSSH();
-        conn = new StubSSHLibrary();
+        ssh = new DefaultStreamConnection();
+        conn = new StubConnectionLibrary();
         conn.setInputStream(new ByteArrayInputStream(bibleBytes));
-        ssh.setSSHConnection(conn);
+        ssh.setConnectionLibrary(conn);
         ssh.connect("host", "username");
     }
     
