@@ -25,5 +25,27 @@
         </configuration>
       </plugin>
    </plugins>
-  </build>
+        <extensions>
+            <extension>
+                <groupId>org.jvnet.wagon-svn</groupId>
+                <artifactId>wagon-svn</artifactId>
+                <version>1.8</version>
+            </extension>
+        </extensions>
+ 
+    </build>
+
+    <distributionManagement>
+        <repository>
+            <uniqueVersion>false</uniqueVersion>
+            <id>googlecode</id>
+            <url>svn:https://twdata-m2-repository.googlecode.com/svn</url>
+        </repository>
+    </distributionManagement>
+
+    <scm>
+        <connection>scm:svn:https://enchanter.googlecode.com/svn/trunk</connection>
+        <developerConnection>scm:svn:https://enchanter.googlecode.com/svn/trunk</developerConnection>
+    </scm>
+
 </project>
