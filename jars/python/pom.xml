@@ -3,14 +3,14 @@
   <parent>
       <groupId>org.twdata.enchanter</groupId>
       <artifactId>enchanter-jar-parent</artifactId>
-      <version>0.6.1</version>
+      <version>0.6.2-SNAPSHOT</version>
   </parent>
  
  
   <groupId>org.twdata.enchanter</groupId>
   <artifactId>enchanter-python</artifactId>
   <packaging>jar</packaging>
-  <version>0.6.1</version>
+  <version>0.6.2-SNAPSHOT</version>
   <name>Enchanter with Python</name>
   <dependencies>
     <dependency>
