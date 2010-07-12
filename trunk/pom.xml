@@ -4,7 +4,7 @@
   <groupId>org.twdata.enchanter</groupId>
   <artifactId>enchanter-parent</artifactId>
   <packaging>pom</packaging>
-  <version>0.6</version>
+  <version>0.6.1-SNAPSHOT</version>
   <name>Enchanter</name>
   <url>http://code.google.com/p/enchanter</url>
 
