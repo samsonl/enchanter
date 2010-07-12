@@ -3,7 +3,6 @@ package org.twdata.enchanter;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-import org.twdata.enchanter.impl.CommonsTelnetLibrary;
 import org.twdata.enchanter.impl.DefaultStreamConnection;
 
 import bsh.EvalError;

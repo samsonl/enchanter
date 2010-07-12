@@ -59,6 +59,15 @@ public class DefaultStreamConnection implements StreamConnection {
         setupStreams();
     }
 
+    public void connect(String host, String username, String password) throws IOException {
+        try {
+			connectionLibrary.connect(host, username, password);
+		} catch (OperationNotSupportedException e) {
+			throw new RuntimeException(e);
+		}
+        setupStreams();
+    }
+
     private void setupStreams() {
         this.in = new BufferedInputStream(connectionLibrary.getInputStream());
         this.out = new PrintWriter(connectionLibrary.getOutputStream());
