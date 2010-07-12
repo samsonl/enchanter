@@ -1,10 +1,9 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.twdata.enchanter</groupId>
   <artifactId>enchanter-parent</artifactId>
   <packaging>pom</packaging>
-  <version>0.6.1-SNAPSHOT</version>
+  <version>0.6.1</version>
   <name>Enchanter</name>
   <url>http://code.google.com/p/enchanter</url>
 
@@ -44,8 +43,8 @@
     </distributionManagement>
 
     <scm>
-        <connection>scm:svn:https://enchanter.googlecode.com/svn/trunk</connection>
-        <developerConnection>scm:svn:https://enchanter.googlecode.com/svn/trunk</developerConnection>
+        <connection>scm:svn:https://enchanter.googlecode.com/svn/tags/enchanter-parent-0.6.1</connection>
+        <developerConnection>scm:svn:https://enchanter.googlecode.com/svn/tags/enchanter-parent-0.6.1</developerConnection>
     </scm>
 
 </project>
