@@ -20,6 +20,9 @@ public class StubConnectionLibrary implements ConnectionLibrary {
     public void connect(String host, String username) throws IOException {
     }
 
+    public void connect(String host, String username, String password) throws IOException {        
+    }
+
     public void connect(String host, int port, String username, String password) throws IOException {
     }
 

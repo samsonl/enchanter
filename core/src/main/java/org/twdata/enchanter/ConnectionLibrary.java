@@ -21,16 +21,26 @@ public interface ConnectionLibrary {
      * Connect to the remote StreamConnection server using public key authentication
      * 
      * @param host The remote StreamConnection server
-     * @param username The user name on the server
+     * @param username The user name on the server. null means use the local system username
      * @throws IOException If a connection cannot be made
      */
     public void connect(String host, String username) throws IOException, OperationNotSupportedException;
 
     /**
+     * Connect to the remote StreamConnection server using public key authentication
+     *
+     * @param host The remote StreamConnection server
+     * @param username The user name on the server. null means use the local system username
+     * @param password The password to use for the public key or password authentication
+     * @throws IOException If a connection cannot be made
+     */
+    public void connect(String host, String username, String password) throws IOException, OperationNotSupportedException;
+
+    /**
      * Connect to the remote StreamConnection server using public key or password authentication
      * 
      * @param host The remote StreamConnection server
-     * @param username The user name on the server
+     * @param username The user name on the server. null means use the local system username
      * @throws IOException If a connection cannot be made
      */
     public void connect(String host, int port, String username, String password)
@@ -41,7 +51,7 @@ public interface ConnectionLibrary {
      * 
      * @param host The remote StreamConnection server
      * @param port The remote StreamConnection server port
-     * @param username The user name on the server
+     * @param username The user name on the server. null means use the local system username
      * @param password The password to use for the public key or password authentication
      * @param privateKeyPath The path to the private key
      * @throws IOException If a connection cannot be made
