@@ -3,7 +3,7 @@
   <groupId>org.twdata.enchanter</groupId>
   <artifactId>enchanter-parent</artifactId>
   <packaging>pom</packaging>
-  <version>0.6.1</version>
+  <version>0.6.2-SNAPSHOT</version>
   <name>Enchanter</name>
   <url>http://code.google.com/p/enchanter</url>
 
@@ -43,8 +43,8 @@
     </distributionManagement>
 
     <scm>
-        <connection>scm:svn:https://enchanter.googlecode.com/svn/tags/enchanter-parent-0.6.1</connection>
-        <developerConnection>scm:svn:https://enchanter.googlecode.com/svn/tags/enchanter-parent-0.6.1</developerConnection>
+        <connection>scm:svn:https://enchanter.googlecode.com/svn/trunk</connection>
+        <developerConnection>scm:svn:https://enchanter.googlecode.com/svn/trunk</developerConnection>
     </scm>
 
 </project>
