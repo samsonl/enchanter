@@ -58,13 +58,13 @@
     </dependency>
   </dependencies>
 
-  <!--
+ <!--
   <build>
     <plugins>
         <plugin>
             <groupId>org.twdata.enchanter</groupId>
             <artifactId>maven-enchanter-plugin</artifactId>
-            <version>0.6.2-SNAPSHOT</version>
+            <version>0.6.3-SNAPSHOT</version>
             <configuration>
                 <scriptFile>sample.py</scriptFile>
                 <configFile>config.properties</configFile>
@@ -73,5 +73,6 @@
     </plugins>
   </build>
   -->
+ 
 
 </project>
