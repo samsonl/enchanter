@@ -10,6 +10,7 @@
   <modules>
       <module>core</module>
       <module>jars</module>
+      <module>maven-plugin</module>
   </modules>
 
 
