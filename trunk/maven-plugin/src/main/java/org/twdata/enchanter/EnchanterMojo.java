@@ -117,25 +117,14 @@ public class EnchanterMojo extends AbstractMojo
                 variables = new HashMap<String, String>((Map)props);
             }
 
-            ParamResolver paramResolver = new ParamResolver();
-            String originalScript = null;
-            try 
-            {
-                originalScript = readFileToString(scriptFp);
-            }
-            catch (IOException e)
-            {
-                throw new MojoExecutionException(String.format("the specified script %s cannot be read.", absoluteScriptPath));
-            }
-
-            String resolvedScript = paramResolver.resolve(originalScript, variables);
-            executeInPython(resolvedScript);
+            executeInPython(scriptFp.getAbsolutePath(), variables);
         }
         else
         {
             throw new MojoExecutionException("the mojo currently only supports Python (*.py)!!!");
         }
 
+        // signal the end of execution.
         getLog().info("====================Finished the execution====================");
     }
 
@@ -148,48 +137,33 @@ public class EnchanterMojo extends AbstractMojo
     }
 
     /**
-     * Read the input file to string.
-     * This is not a good approach in general but our script files are expected
-     * to be very small thus this would not affect the performance.
-     *
-     * @param fp the file.
-     *
-     * @return string content of the file.
-     * @throws java.io.IOException error during reading the file.
-     */
-    private String readFileToString(File fp) throws IOException {
-
-        final StringBuilder sb = new StringBuilder();
-        final BufferedReader reader = new BufferedReader(new FileReader(fp));
-
-        String line;
-        while((line=reader.readLine()) != null)
-        {
-            sb.append(line);
-            sb.append(System.getProperty("line.separator"));
-        }
-
-        // close the file and return
-        reader.close();
-        return sb.toString();
-    }
-
-    /**
      * Execute the python script.
      *
-     * @param script the script string (not file location).
+     * @param scriptLocation the script file location.
+     * @param configs the user configurations.
      */
-    private void executeInPython(String script)
+    private void executeInPython(String scriptLocation, Map<String, String> configs)
     {
         // The script interpreter
-        PythonInterpreter interp = new PythonInterpreter();
-        StreamConnection conn = new DefaultStreamConnection();
+        final PythonInterpreter interp = new PythonInterpreter();
+        final StreamConnection conn = new DefaultStreamConnection();
 
         // pass variables to the python interpreter.
         interp.set("ssh", conn);
         interp.set("conn", conn);
         interp.set("mavenProject", project);
         interp.set("mavenSession", session);
-        interp.exec(script);
+
+        // pass on all the user configs
+        for(Map.Entry<String, String> pair:configs.entrySet())
+        {
+            getLog().info("variable " + pair.getKey()
+                            + "(" + pair.getValue().getClass().toString() + ") ="
+                            + pair.getValue());
+            interp.set(pair.getKey(), pair.getValue());
+        }
+
+        // execute the script
+        interp.execfile(scriptLocation);
     }
 }
