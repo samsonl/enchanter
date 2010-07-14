@@ -17,6 +17,7 @@ import java.util.Properties;
 /**
  * Mojo which executes the enchanter.
  *
+ * @aggregator true
  * @goal enchanter
  */
 public class EnchanterMojo extends AbstractMojo
