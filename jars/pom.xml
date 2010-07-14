@@ -3,13 +3,13 @@
   <parent>
       <groupId>org.twdata.enchanter</groupId>
       <artifactId>enchanter-parent</artifactId>
-      <version>0.6.2</version>
+      <version>0.6.3-SNAPSHOT</version>
   </parent>
  
   <groupId>org.twdata.enchanter</groupId>
   <artifactId>enchanter-jar-parent</artifactId>
   <packaging>pom</packaging>
-  <version>0.6.2</version>
+  <version>0.6.3-SNAPSHOT</version>
   <name>Enchanter Jar Parent</name>
 
   <modules>
@@ -22,7 +22,7 @@
     <dependency>
       <groupId>org.twdata.enchanter</groupId>
 	  <artifactId>enchanter-core</artifactId>
-	  <version>0.6.2</version>
+	  <version>0.6.3-SNAPSHOT</version>
     </dependency>
   </dependencies>
   <build>
