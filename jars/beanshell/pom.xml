@@ -3,14 +3,14 @@
   <parent>
       <groupId>org.twdata.enchanter</groupId>
       <artifactId>enchanter-jar-parent</artifactId>
-      <version>0.6.2-SNAPSHOT</version>
+      <version>0.6.2</version>
   </parent>
  
  
   <groupId>org.twdata.enchanter</groupId>
   <artifactId>enchanter-beanshell</artifactId>
   <packaging>jar</packaging>
-  <version>0.6.2-SNAPSHOT</version>
+  <version>0.6.2</version>
   <name>Enchanter with Beanshell</name>
   <dependencies>
     <dependency>
